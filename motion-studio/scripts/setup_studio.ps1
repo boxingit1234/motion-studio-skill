@@ -28,12 +28,14 @@ if (-not $Yes) {
 New-Item -ItemType Directory -Force -Path (Join-Path $Studio 'films') | Out-Null
 Push-Location $Studio
 try {
-  if (-not (Test-Path 'package.json')) { npm init -y | Out-Null }
-  npm install --save-dev --no-fund --no-audit playwright@1.63.0 three@0.186.1 three-mesh-bvh@0.9.15 pngjs@5
-  npx playwright install chromium
-  if (-not (Test-Path '.venv')) { & $Python -m venv .venv }
-  & .\.venv\Scripts\python.exe -m pip install --upgrade pip
-  & .\.venv\Scripts\python.exe -m pip install numpy scipy soundfile pillow
+  # npm.cmd / npx.cmd, not npm / npx: those resolve to npm.ps1, which a default execution policy blocks
+  function Run($what) { if ($LASTEXITCODE -ne 0) { Write-Host "FAILED: $what" -ForegroundColor Red; exit 1 } }
+  if (-not (Test-Path 'package.json')) { & npm.cmd init -y | Out-Null; Run 'npm init' }
+  & npm.cmd install --save-dev --no-fund --no-audit playwright@1.63.0 three@0.186.1 three-mesh-bvh@0.9.15 pngjs@5; Run 'npm install'
+  & npx.cmd playwright install chromium; Run 'playwright install chromium'
+  if (-not (Test-Path '.venv')) { & $Python -m venv .venv; Run 'python -m venv' }
+  & .\.venv\Scripts\python.exe -m pip install --upgrade pip; Run 'pip upgrade'
+  & .\.venv\Scripts\python.exe -m pip install numpy scipy soundfile pillow; Run 'pip install'
   if (-not (Test-Path 'CLAUDE.md')) {
 @'
 # Motion studio

@@ -16,14 +16,14 @@ This repo is **private**, so you need a GitHub account with access:
 Then open **PowerShell** (Start → type *PowerShell* → Enter) and paste this **one line**:
 
 ```powershell
-winget install --id GitHub.cli -e --accept-source-agreements --accept-package-agreements; $env:Path += ";$env:ProgramFiles\GitHub CLI"; gh auth login -w; gh api -H "Accept: application/vnd.github.raw" /repos/boxingit1234/motion-studio-skill/contents/install.ps1 | Out-String | iex
+winget install --id GitHub.cli -e --accept-source-agreements --accept-package-agreements; $env:Path += ";$env:ProgramFiles\GitHub CLI"; gh auth status *> $null; if ($LASTEXITCODE) { gh auth login -w }; gh api -H "Accept: application/vnd.github.raw" /repos/boxingit1234/motion-studio-skill/contents/install.ps1 | Out-String | iex
 ```
 
 - It installs the GitHub command-line tool.
 - It logs you in: a browser opens, you enter the 8-character code it shows, and you click **Authorize**.
 - Then it runs the installer.
 
-It asks for a folder and a yes, then:
+It asks for a folder and a yes. A **progress bar** with a live status line shows every step, so you always see that it's working. Then it:
 1. installs **Node.js, Python 3.12 and FFmpeg** if they are missing (with `winget`; Windows may ask for permission);
 2. installs the skill to `%USERPROFILE%\.claude\skills\motion-studio`;
 3. sets up the studio folder (default `%USERPROFILE%\motion-studio`): Playwright + Chromium, three.js, the Python audio packages (~270 MB);
@@ -57,7 +57,7 @@ Claude researches the facts into `CLAIMS.md` and shows contact sheets for your f
 
 ## Troubleshooting
 - **"node / ffmpeg not found" right after install:** close PowerShell, open a new one and run the command again. The PATH updates only in new windows.
-- **"running scripts is disabled":** run `Set-ExecutionPolicy -Scope Process Bypass` in that window, then the command again.
+- **"running scripts is disabled":** fixed in the current installer (it no longer runs `.ps1` files). Just run the line again.
 - **"Not Found" / 404 when downloading:** the invitation isn't accepted yet, or you logged in with another GitHub account (`gh auth status` shows which).
 - **Claude doesn't use the skill:** check that `%USERPROFILE%\.claude\skills\motion-studio\SKILL.md` exists, restart Claude, or say "use the motion-studio skill".
 - **Renders slow the PC:** tell Claude "stop", or ask it for the gentle mode. Windows Defender rescanning files can also slow things; you may add an exclusion for the studio's `films` folder yourself.
