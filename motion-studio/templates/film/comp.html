@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion Studio — example reel</title>
+<!-- Fonts load at render time (nothing is saved). Swap for the brand's fonts; preload every weight you use (see FACES below). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=block" rel="stylesheet">
+<style>
+  /* ── brand tokens: replace with the client's ── */
+  :root { --bg:#0B0F14; --bg2:#141B24; --ink:#F4F4F6; --mute:rgba(244,244,246,.72); --accent:#9BE15D; --paper:#F3F1EC; --paperInk:#111418; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1080px; height:1920px; overflow:hidden; background:var(--bg); }
+  #stage { position:relative; width:1080px; height:1920px; overflow:hidden; font-family:"Inter", sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased; }
+  canvas { position:absolute; left:0; top:0; width:1080px; height:1920px; }
+  .layer { position:absolute; inset:0; }
+  .ln { position:absolute; left:76px; width:928px; white-space:nowrap; will-change:transform, opacity; }
+  .h { font-family:"Barlow Condensed"; font-weight:700; font-size:168px; line-height:.94; text-transform:uppercase; letter-spacing:.005em; }
+  .h.mid { font-size:118px; }
+  .lbl { font-weight:600; font-size:28px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .sub { font-weight:500; font-size:40px; line-height:1.25; color:var(--mute); white-space:normal; }
+  .ch { display:inline-block; will-change:transform, opacity; }
+  .nc { text-transform:none; }
+  #card { position:absolute; left:120px; top:640px; width:840px; height:560px; border-radius:36px; overflow:hidden; box-shadow:0 40px 120px rgba(0,0,0,.45); }
+  #cardImg { position:absolute; inset:0; }
+  #cardName { position:absolute; left:48px; bottom:40px; font-family:"Barlow Condensed"; font-weight:700; font-size:72px; text-transform:uppercase; color:#fff; }
+  .chip { position:absolute; left:120px; height:92px; padding:0 34px 0 74px; border-radius:46px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+          display:flex; align-items:center; font-weight:600; font-size:36px; white-space:nowrap; }
+  .chip::before { content:""; position:absolute; left:32px; top:36px; width:20px; height:20px; border-radius:50%; background:var(--accent); }
+  #num { position:absolute; left:76px; top:520px; font-family:"Barlow Condensed"; font-weight:700; font-size:420px; line-height:.9; color:var(--paperInk); white-space:nowrap; }
+  #num .u { font-size:.32em; margin-left:.08em; }
+  #numLbl { position:absolute; left:84px; top:470px; font-weight:600; font-size:28px; letter-spacing:.16em; text-transform:uppercase; color:#3D7A12; }
+  #numSub { position:absolute; left:84px; top:956px; font-weight:500; font-size:40px; color:rgba(17,20,24,.75); }
+  #end { position:absolute; inset:0; }
+  #brand { position:absolute; left:0; width:1080px; top:760px; text-align:center; font-family:"Barlow Condensed"; font-weight:700; font-size:120px; letter-spacing:.06em; text-transform:uppercase; }
+  #cta { position:absolute; left:330px; top:960px; width:420px; height:108px; border-radius:54px; background:var(--accent); color:#0B0F14; font-weight:700; font-size:38px;
+         display:flex; align-items:center; justify-content:center; letter-spacing:.03em; }
+  #url { position:absolute; left:0; width:1080px; top:1110px; text-align:center; font-weight:600; font-size:44px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg" width="1080" height="1920"></canvas>
+  <div id="type" class="layer"></div>
+  <div id="card" class="layer"><canvas id="cardImg" width="840" height="560"></canvas><div id="cardName">Product One</div></div>
+  <div id="chips" class="layer"></div>
+  <div id="numL" class="layer"><div id="numLbl">Autonomy</div><div id="num"></div><div id="numSub">on a single charge*</div></div>
+  <canvas id="fx" width="1080" height="1920"></canvas>
+  <div id="end" class="layer"><div id="brand">Brand</div><div id="cta">Order now</div><div id="url">example.com</div></div>
+</div>
+<script type="module">
+// ═════════ timing: 120 BPM, 30 beats = 15.000 s, 30 fps. Every event lives in E (beats) and is exported for the sound script. ═════════
+const BPM = 120, B = 60 / BPM, BEATS = 30, DUR = BEATS * B, FPS = 30, W = 1080, H = 1920;
+window.DUR = DUR; window.FPS = FPS; window.BPM = BPM;
+const E = {
+  hook2: 1.0, card: 6, chips: [8, 9.5, 11], toPaper: 14, numSteps: [14.25, 15.5, 16.75], chart: [17.5, 19.5],
+  note: [20.5, 21.2, 21.8], toEnd: 24, brand: 24.5, cta: 25.5, url: 26.2, tap: 27.5,
+};
+window.EVENTS = { BPM, BEATS, ...E };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, u) => a + (b - a) * u;
+const P = (x, a, b) => clamp((x - a) / (b - a));
+const ease = { out3: (u) => 1 - Math.pow(1 - u, 3), io: (u) => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2, sine: (u) => -(Math.cos(Math.PI * u) - 1) / 2 };
+const spring = (u) => u <= 0 ? 0 : u >= 1 ? 1 : Math.min(1, (1 - Math.exp(-7 * u) * (1 + 7 * u)) / (1 - 8 * Math.exp(-7)));   // critically damped, no overshoot
+function mulberry(a) { return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const $ = (id) => document.getElementById(id);
+
+// ═════════ captions: [beat in, beat out, top px, class, html]. Letters of ".h" lines rise one by one on the spring. ═════════
+const CAPS = [
+  { b0: -1, b1: 5.6, y: 300, cls: "h", html: "Energy" },                                // frame 0 is already readable (thumbnail)
+  { b0: E.hook2, b1: 5.6, y: 458, cls: "h", html: 'that <span style="color:var(--accent)">stays.</span>' },
+  { b0: 6.3, b1: 13.6, y: 300, cls: "lbl", html: "New" },
+  { b0: 6.5, b1: 13.6, y: 350, cls: "h mid", html: "Product One" },
+  { b0: 24.6, b1: 99, y: 1250, cls: "sub", html: "*example claim — every number on screen needs a source in CLAIMS.md" },
+];
+const typeEl = $("type");
+for (const c of CAPS) {
+  c.el = document.createElement("div"); c.el.className = "ln " + c.cls; c.el.style.top = c.y + "px";
+  if (/\bh\b/.test(c.cls)) {                                         // split text into letter spans (keeps inner spans' style)
+    const tmp = document.createElement("div"); tmp.innerHTML = c.html;
+    const walk = (node, style) => [...node.childNodes].flatMap((n) => n.nodeType === 3 ? [...n.textContent].map((ch) => `<span class="ch"${style ? ` style="${style}"` : ""}>${ch === " " ? "&nbsp;" : ch}</span>`) : walk(n, n.getAttribute("style") || ""));
+    c.el.innerHTML = walk(tmp, "").join(""); c.chars = [...c.el.querySelectorAll(".ch")];
+  } else c.el.innerHTML = c.html;
+  typeEl.appendChild(c.el);
+}
+function inkWidth(el) { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; }
+function fitHeadlines() { for (const c of CAPS) if (c.chars) { const fs = parseFloat(getComputedStyle(c.el).fontSize), w = inkWidth(c.el); if (w > 928) c.el.style.fontSize = (fs * 928 / w).toFixed(1) + "px"; } }
+function capsAt(b) {
+  const t = b * B;
+  for (const c of CAPS) {
+    const tin = c.b0 * B, tout = c.b1 * B, vis = t >= tin - .01 && t < tout + .3;
+    c.el.style.display = vis ? "block" : "none"; if (!vis) continue;
+    const out = ease.sine(P(t, tout, tout + .28));
+    if (c.chars) {
+      c.el.style.opacity = 1 - out; c.el.style.transform = `translateY(${-out * 10}px)`;
+      c.chars.forEach((ch, j) => { const t0 = tin + j * .028, u = c.b0 < 0 ? 1 : spring(P(t, t0, t0 + .55)); ch.style.opacity = Math.min(1, u * 1.6); ch.style.transform = `translateY(${(1 - u) * 44}px)`; });
+    } else {
+      const u = ease.out3(P(t, tin, tin + .5));
+      c.el.style.opacity = u * (1 - out); c.el.style.transform = `translateY(${(1 - u) * 26 - out * 10}px)`; c.el.style.filter = u < 1 ? `blur(${(1 - u) * 6}px)` : "none";
+    }
+  }
+}
+
+// ═════════ background: slow seeded light blobs (dark), then a hard light switch to paper at E.toPaper, dark again for the end card ═════════
+const bg = $("bg").getContext("2d");
+const BLOBS = (() => { const r = mulberry(7); return [...Array(5)].map(() => ({ x: r() * W, y: r() * H, r: 380 + r() * 420, sp: .05 + r() * .08, ph: r() * 6.28 })); })();
+function bgAt(b) {
+  const paper = b >= E.toPaper && b < E.toEnd;
+  bg.fillStyle = paper ? getComputedStyle(document.documentElement).getPropertyValue("--paper") : "#0B0F14"; bg.fillRect(0, 0, W, H);
+  if (paper) return;
+  for (const o of BLOBS) {
+    const x = o.x + Math.sin(b * o.sp + o.ph) * 120, y = o.y + Math.cos(b * o.sp * .8 + o.ph) * 160;
+    const g = bg.createRadialGradient(x, y, 0, x, y, o.r); g.addColorStop(0, "rgba(155,225,93,.10)"); g.addColorStop(1, "rgba(155,225,93,0)");
+    bg.fillStyle = g; bg.fillRect(0, 0, W, H);
+  }
+}
+
+// ═════════ the product card (placeholder image drawn once — swap for a real product photo / capture) ═════════
+{
+  const g = $("cardImg").getContext("2d"), gr = g.createLinearGradient(0, 0, 840, 560);
+  gr.addColorStop(0, "#2B3A4A"); gr.addColorStop(1, "#0F151C"); g.fillStyle = gr; g.fillRect(0, 0, 840, 560);
+  g.fillStyle = "#E9ECEF"; g.beginPath(); g.roundRect(330, 70, 180, 380, 28); g.fill();               // a stand-in "product"
+  g.fillStyle = "#9BE15D"; g.beginPath(); g.arc(420, 150, 16, 0, 7); g.fill();
+}
+function cardAt(b) {
+  const el = $("card"), vis = b >= E.card - .2 && b < E.toPaper; el.style.display = vis ? "block" : "none"; if (!vis) return;
+  const u = spring(P(b * B, E.card * B, E.card * B + .7));
+  el.style.opacity = Math.min(1, u * 1.5); el.style.transform = `translateY(${(1 - u) * 160}px) scale(${lerp(.94, 1, u)})`;
+}
+const CHIPS = ["Feature one, short", "Feature two, short", "Feature three"];
+const chipEls = CHIPS.map((txt, i) => { const d = document.createElement("div"); d.className = "chip"; d.textContent = txt; d.style.top = (1260 + i * 112) + "px"; $("chips").appendChild(d); return d; });
+function chipsAt(b) {
+  chipEls.forEach((d, i) => {
+    const t0 = E.chips[i] * B, vis = b >= E.chips[i] - .1 && b < E.toPaper; d.style.display = vis ? "flex" : "none"; if (!vis) return;
+    const u = spring(P(b * B, t0, t0 + .5)); d.style.opacity = Math.min(1, u * 1.5); d.style.transform = `translateX(${(1 - u) * -60}px)`;
+  });
+}
+
+// ═════════ the hero number: digit-by-digit changes, old value out first, then the new one in (never two numbers overlapping) ═════════
+const NUMS = ["8", "16", "24"];
+function numAt(b) {
+  const vis = b >= E.numSteps[0] - .2 && b < E.toEnd; $("numL").style.display = vis ? "block" : "none"; if (!vis) return;
+  let k = 0; E.numSteps.forEach((s, i) => { if (b >= s) k = i; });
+  const t0 = E.numSteps[k] + (k ? .2 : 0);
+  if (k > 0 && b < t0) {                                          // the old value lifts out first …
+    const uo = P(b, E.numSteps[k], t0);
+    $("num").innerHTML = `<span class="ch" style="opacity:${1 - uo};transform:translateY(${-uo * 40}px)">${NUMS[k - 1]}</span><span class="u">h</span>`;
+  } else                                                          // … then the new one rises in, digit by digit
+    $("num").innerHTML = [...NUMS[k]].map((c, j) => { const u = spring(P(b, t0 + j * .08, t0 + j * .08 + .45 / B)); return `<span class="ch" style="opacity:${Math.min(1, u * 1.5)};transform:translateY(${(1 - u) * 30}px)">${c}</span>`; }).join("") + `<span class="u">h</span>`;
+  const u = ease.out3(P(b, E.numSteps[0], E.numSteps[0] + .8)); for (const id of ["numLbl", "numSub"]) { $(id).style.opacity = u; $(id).style.transform = `translateY(${(1 - u) * 20}px)`; }
+}
+
+// ═════════ fx canvas: a growing bar chart and a hand-drawn annotation ═════════
+const fx = $("fx").getContext("2d");
+function fxAt(b) {
+  fx.clearRect(0, 0, W, H);
+  if (b >= E.chart[0] && b < E.toEnd) {                        // bars grow one after another
+    const vals = [.35, .55, .8, 1.0], x0 = 120, base = 1640, bw = 160, gap = 60, maxH = 420;
+    vals.forEach((v, i) => { const u = spring(P(b, E.chart[0] + i * .35, E.chart[0] + i * .35 + 1.2)); fx.fillStyle = i === vals.length - 1 ? "#3D7A12" : "rgba(17,20,24,.18)"; fx.beginPath(); fx.roundRect(x0 + i * (bw + gap), base - v * maxH * u, bw, v * maxH * u, 14); fx.fill(); });
+  }
+  if (b >= E.note[0] && b < E.toEnd) {                         // the drawn annotation: circle → leader → label
+    const cx = 860, cy = 1222, R = 70, a = 1 - ease.sine(P(b, E.toEnd - .4, E.toEnd));
+    const u1 = ease.io(P(b, E.note[0], E.note[0] + .6)), u2 = ease.io(P(b, E.note[1], E.note[1] + .5)), u3 = spring(P(b, E.note[2], E.note[2] + .8));
+    fx.save(); fx.globalAlpha = a; fx.strokeStyle = "#3D7A12"; fx.lineWidth = 6; fx.lineCap = "round";
+    fx.beginPath(); fx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + u1 * Math.PI * 1.94); fx.stroke();
+    if (u2 > 0) { fx.beginPath(); fx.moveTo(cx, cy - R - 10); fx.lineTo(cx, lerp(cy - R - 10, cy - R - 190, u2)); fx.stroke(); }
+    if (u3 > 0) { fx.globalAlpha = a * Math.min(1, u3 * 1.4); fx.font = "600 30px Inter"; fx.letterSpacing = "3px"; fx.fillStyle = "#3D7A12"; fx.textAlign = "right"; fx.fillText("THE BEST BAR", cx + 60, cy - R - 214 + (1 - u3) * 20); }
+    fx.restore();
+  }
+}
+
+// ═════════ end card ═════════
+function endAt(b) {
+  const vis = b >= E.toEnd; $("end").style.display = vis ? "block" : "none"; if (!vis) return;
+  for (const [id, b0] of [["brand", E.brand], ["cta", E.cta], ["url", E.url]]) { const u = spring(P(b, b0, b0 + 1.0)); const el = $(id); el.style.opacity = Math.min(1, u * 1.4); el.style.transform = `translateY(${(1 - u) * 30}px)`; }
+  const p = P(b, E.tap, E.tap + 1); $("cta").style.boxShadow = p > 0 && p < 1 ? `0 0 0 ${p * 28}px rgba(155,225,93,${(1 - p) * .4})` : "none";
+  $("cta").style.transform += p > 0 && p < .15 ? " scale(.96)" : "";
+}
+
+window.renderAt = async (t) => {
+  const b = Math.min(t, DUR - 1e-6) / B;
+  bgAt(b); capsAt(b); cardAt(b); chipsAt(b); numAt(b); fxAt(b); endAt(b);
+  return { b, shot: b < E.card ? "hook" : b < E.toPaper ? "product" : b < E.toEnd ? "proof" : "end" };
+};
+// overlap / safe-area audit: ink boxes of every visible text, the product card as "product"
+// ink, not boxes: a text's layout box includes the font's whole ascent/descent; trim it to the glyphs actually drawn (canvas metrics)
+const mctx = document.createElement("canvas").getContext("2d");
+function inkBox(el) {
+  const r = document.createRange(); r.selectNodeContents(el); const q = r.getBoundingClientRect(), cs = getComputedStyle(el);
+  mctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const txt = el.textContent.replace(/\s+/g, " ").trim(), m = mctx.measureText(cs.textTransform === "uppercase" ? txt.toUpperCase() : txt);
+  return [q.left, q.top + Math.max(0, m.fontBoundingBoxAscent - m.actualBoundingBoxAscent), q.right, q.bottom - Math.max(0, m.fontBoundingBoxDescent - m.actualBoundingBoxDescent)].map(Math.round);
+}
+window.auditAt = (t) => {
+  const texts = [], ink = inkBox;
+  const visible = (el) => el.offsetParent !== null && +getComputedStyle(el).opacity > .05;
+  document.querySelectorAll(".ln, .chip, #num, #numLbl, #numSub, #brand, #cta, #url").forEach((el) => { if (visible(el) && el.textContent.trim()) texts.push({ id: (el.id || el.className) + ":" + el.textContent.slice(0, 16), box: ink(el) }); });
+  const card = $("card"), products = visible(card) ? [card.getBoundingClientRect()].map((q) => [q.left, q.top, q.right, q.bottom].map(Math.round)) : [];
+  return { texts, products, safe: [60, 200, 1020, 1640] };
+};
+const FACES = ["700 100px 'Barlow Condensed'", "600 100px 'Barlow Condensed'", "400 40px Inter", "500 40px Inter", "600 40px Inter", "700 40px Inter"];
+await document.fonts.ready; await Promise.all(FACES.map((f) => document.fonts.load(f)));
+const missing = FACES.filter((f) => !document.fonts.check(f)); if (missing.length) console.error("fonts missing: " + missing.join(" | "));
+fitHeadlines();
+window.ready = true;
+</script>
+</body>
+</html>

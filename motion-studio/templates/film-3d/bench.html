@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<script type="importmap">{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "three-mesh-bvh": "/node_modules/three-mesh-bvh/src/index.js"
+} }</script>
+<style>html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}canvas{display:block}</style>
+</head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script type="module">
+import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { PathTracer, Materials, buildSet, F } from "./pt.js";
+const W = 1080, H = 1920;
+const pt = window.pt = new PathTracer(document.getElementById("c"), W, H);
+const M = new Materials();
+M.add("wall", { albedo: [.82, .8, .76], rough: .9, pattern: 2, p: [3, 0, 0, 0] });
+M.add("floor", { albedo: [.55, .38, .24], rough: .45, pattern: 1, p: [.19, 1.4, 0, 0] });
+M.add("white", { albedo: [.86, .86, .85], rough: .3 });
+M.add("glass", { flags: F.GLASS, tint: [.92, .94, .95] });
+M.add("sofa", { albedo: [.5, .48, .45], rough: .9, pattern: 3 });
+const parts = [];
+const box = (w, h, d, x, y, z, mat) => parts.push({ geo: new THREE.BoxGeometry(w, h, d), mat: M.id(mat), m: new THREE.Matrix4().makeTranslation(x, y, z) });
+// a 6 × 2.9 × 5 m room, the window wall at x = 3 (opening 0.3..2.6 high, z −2..2)
+box(6, .1, 5, 0, -.05, 0, "floor"); box(6, .1, 5, 0, 2.95, 0, "wall");
+box(.1, 2.9, 5, -3.05, 1.45, 0, "wall"); box(6, 2.9, .1, 0, 1.45, -2.55, "wall"); box(6, 2.9, .1, 0, 1.45, 2.55, "wall");
+box(.1, .3, 5, 3.05, .15, 0, "wall"); box(.1, .3, 5, 3.05, 2.75, 0, "wall"); box(.1, 2.9, .5, 3.05, 1.45, -2.25, "wall"); box(.1, 2.9, .5, 3.05, 1.45, 2.25, "wall");
+box(.02, 2.3, 4, 3.05, 1.45, 0, "glass");
+parts.push({ geo: new RoundedBoxGeometry(.59, 1.23, .255, 6, .02), mat: M.id("white"), m: new THREE.Matrix4().makeTranslation(-1.5, .615, -2.37) });
+parts.push({ geo: new RoundedBoxGeometry(2.2, .45, .95, 6, .08), mat: M.id("sofa"), m: new THREE.Matrix4().makeTranslation(.4, .3, 1.3) });
+for (let i = 0; i < 400; i++) parts.push({ geo: new THREE.SphereGeometry(.05, 16, 12), mat: M.id("white"), m: new THREE.Matrix4().makeTranslation(-2 + (i % 20) * .1, 2.2, -2.3 + Math.floor(i / 20) * .05) });
+const t0 = performance.now();
+const S = buildSet(parts);
+const tBuild = performance.now() - t0;
+pt.setSet(S, M);
+const sunDir = new THREE.Vector3(1, .18, -.35).normalize();
+pt.setEnv({ sunDir: sunDir.toArray(), sunE: [14, 9, 5], sunAngle: .012, skyTop: [.35, .45, .7], skyHor: [1.1, .8, .55], skyGround: [.2, .17, .14], glowCol: [2.2, 1.2, .5], glowPow: 6, skyGain: 1, portal: true, bounces: 4 });
+pt.setLights([{ type: "sun", w: 3 }, { type: "portal", c: [3.0, 1.45, 0], u: [0, 0, 2], v: [0, 1.15, 0], E: [.92, .94, .95], w: 2 }]);
+pt.setCamera({ pos: [-2.3, 1.35, 2.1], target: [.8, 1.0, -1.2], fov: 52, aperture: .0, focus: 3 });
+window.bench = async (N) => {
+  const t = performance.now(); await pt.render(N); pt.resolve();
+  const px = new Uint8Array(4); pt.gl.readPixels(0, 0, 1, 1, pt.gl.RGBA, pt.gl.UNSIGNED_BYTE, px);
+  return { gpu: pt.gpu, tris: S.tris, build: tBuild, N, ms: performance.now() - t, msPer: (performance.now() - t) / N };
+};
+window.ready = true;
+</script></body></html>

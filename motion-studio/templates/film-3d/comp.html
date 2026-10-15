@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion Studio — example 3D product film</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=block" rel="stylesheet">
+<script type="importmap">{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "three-mesh-bvh": "/node_modules/three-mesh-bvh/src/index.js"
+} }</script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1080px; height:1920px; overflow:hidden; background:#0B0F14; }
+  #stage { position:relative; width:1080px; height:1920px; overflow:hidden; color:#F4F4F6; font-family:"Barlow", sans-serif; -webkit-font-smoothing:antialiased; }
+  #gl, #fx { position:absolute; left:0; top:0; width:1080px; height:1920px; }
+  .layer { position:absolute; inset:0; pointer-events:none; }
+  #scrimT { background:linear-gradient(180deg, rgba(11,15,20,.72) 0, rgba(11,15,20,.42) 380px, rgba(11,15,20,0) 760px); opacity:0; }
+  #scrimB { background:linear-gradient(0deg, rgba(11,15,20,.78) 0, rgba(11,15,20,.5) 420px, rgba(11,15,20,0) 860px); opacity:0; }
+  .cap { position:absolute; left:76px; width:930px; }
+  .cap .ln { display:block; will-change:transform, opacity, filter; }
+  .lbl { font-family:"Barlow"; font-weight:600; font-size:28px; letter-spacing:.17em; text-transform:uppercase; color:#9BE15D; margin-bottom:14px; }
+  .h { font-family:"Barlow Condensed"; font-weight:600; font-size:116px; line-height:.98; text-transform:uppercase; letter-spacing:.004em; color:#F4F4F6; white-space:nowrap; }
+  .h.lime { color:#B8EC7E; }
+  .h.xl { font-size:200px; line-height:.9; }
+  .sub { font-family:"Barlow"; font-weight:500; font-size:40px; line-height:1.25; color:rgba(244,244,246,.9); margin-top:18px; }
+  .foot { font-family:"Barlow"; font-weight:500; font-size:24px; color:rgba(244,244,246,.62); margin-top:22px; letter-spacing:.01em; }
+  .s4 { font-size:.62em; vertical-align:-.08em; margin-left:.02em; }
+  .ch { display:inline-block; will-change:transform, opacity; }
+  .nc { text-transform:none; }
+  /* counters */
+  #cnt { position:absolute; left:76px; width:930px; top:228px; opacity:0; }
+  .row { position:relative; height:226px; }
+  .row.small { height:138px; margin-top:4px; }
+  .num { position:absolute; left:0; top:40px; font-family:"Barlow Condensed"; font-weight:600; font-size:176px; line-height:1; white-space:nowrap; color:#F4F4F6; }
+  .row.small .num { font-size:96px; top:38px; }
+  #cable { font-family:"Barlow"; font-weight:500; font-size:34px; color:rgba(244,244,246,.9); margin-top:6px; }
+  .num .u { font-size:.42em; font-weight:500; margin-left:.12em; color:rgba(244,244,246,.86); }
+  .mtag { position:absolute; right:0; top:2px; font-family:"Barlow"; font-weight:600; font-size:28px; letter-spacing:.06em; color:rgba(244,244,246,.9); white-space:nowrap; }
+  /* end card */
+  #end { position:absolute; inset:0; opacity:0; }
+  #logo { position:absolute; left:360px; top:700px; width:360px; height:99px; }
+  #endLine { position:absolute; left:0; width:1080px; top:840px; text-align:center; font-family:"Barlow"; font-weight:600; font-size:30px; letter-spacing:.2em; text-transform:uppercase; color:#9BE15D; }
+  #endProd { position:absolute; left:0; width:1080px; top:560px; text-align:center; font-family:"Barlow Condensed"; font-weight:600; font-size:64px; letter-spacing:.02em; text-transform:uppercase; color:#F4F4F6; }
+  #cta { position:absolute; left:340px; top:1010px; width:400px; height:104px; border-radius:8px; background:#9BE15D; color:#0B0F14; font-family:"Barlow"; font-weight:700; font-size:36px; letter-spacing:.06em; text-transform:uppercase; display:flex; align-items:center; justify-content:center; }
+  #url { position:absolute; left:0; width:1080px; top:1150px; text-align:center; font-family:"Barlow"; font-weight:600; font-size:46px; color:#F4F4F6; letter-spacing:.02em; }
+  #src { position:absolute; left:0; width:1080px; top:1500px; text-align:center; font-family:"Barlow"; font-weight:500; font-size:23px; color:rgba(244,244,246,.5); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <div id="scrimT" class="layer"></div>
+  <div id="scrimB" class="layer"></div>
+  <canvas id="fx" width="1080" height="1920"></canvas>
+  <div id="type" class="layer"></div>
+  <div id="cnt">
+    <div class="row"><div class="lbl">Capacity (example)</div><div class="mtag" id="mtag"></div><div id="eA" class="num"></div><div id="eB" class="num"></div></div>
+    <div class="row small"><div class="lbl">Power (example)</div><div id="pA" class="num"></div><div id="pB" class="num"></div></div>
+    <div id="cable">One sourced line about the modules.</div>
+  </div>
+  <div id="end">
+    <div id="endProd">Brand Product-X1</div>
+    <div id="logo" style="font-family:'Barlow Condensed';font-weight:700;font-size:96px;line-height:99px;text-align:center;letter-spacing:.06em">BRAND</div>   <!-- ← an <img> of the client's real logo file -->
+    <div id="endLine">Your partner line</div>
+    <div id="cta">Call to action</div>
+    <div id="url">example.com</div>
+    <div id="src">Specs: official data sheet of the product (link it in CLAIMS.md)</div>
+  </div>
+</div>
+<script type="module">
+import * as THREE from "three";
+import { Film, B, DUR, FPS, W, H, E, DOCK, SHOTS, shotAt } from "./film.js";
+import { PRODUCT as LUNA, HOUSE } from "./world.js";
+window.DUR = DUR; window.FPS = FPS; window.BPM = 96; window.EVENTS = { BPM: 96, BEATS: 48 };   // (audio.py keeps its own EV table in beats: keep the two in sync)
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, u) => a + (b - a) * u;
+const P = (x, a, b) => clamp((x - a) / (b - a));
+const $ = (id) => document.getElementById(id);
+const film = window.film = new Film($("gl"));
+const fx = $("fx").getContext("2d");
+
+// ───────────────────────── captions (beats) — PLACEHOLDER copy: every real claim must be in CLAIMS.md with its source ─────────────────────────
+const CAPS = [
+  { b0: 1.0, b1: 6.9, zone: "top", y: 300, lines: [["h", "Hook line one."]] },
+  { b0: 3.25, b1: 6.9, zone: "top", y: 416, lines: [["h lime", "Hook line two."]] },
+  { b0: 9.25, b1: 12.85, zone: "top", y: 286, lines: [["lbl", "Brand"], ["h xl", "PRODUCT-X1"], ["sub", "One line: what it is"]] },
+  { b0: 14.6, b1: 16.85, zone: "bot", y: 1560, lines: [["h", "Feature one"], ["sub", "A short, sourced detail."]] },
+  { b0: 17.2, b1: 19.9, zone: "bot", y: 1560, lines: [["h", "Feature two"], ["sub", "Another sourced detail.*"], ["foot", "*the footnote the source requires (lab conditions, model…)"]] },
+  { b0: 28.6, b1: 31.35, zone: "top", y: 250, lines: [["lbl", "Modular"], ["h", 'Modules of 5 or 6.9 <span class="nc">kWh</span>'], ["sub", "Example sub line"]] },
+  { b0: 33.0, b1: 35.9, zone: "top", y: 280, lines: [["lbl", "Spec label"], ["h xl", "IP00"], ["sub", "What the spec means for the buyer"]] },
+  { b0: 36.3, b1: 39.6, zone: "top", y: 280, lines: [["lbl", "Spec label"], ["h xl", "−00 °C … +00 °C"]] },
+  { b0: 40.6, b1: 43.85, zone: "top", y: 1330, lines: [["h", "Bookend line one."]] },
+  { b0: 41.85, b1: 43.85, zone: "top", y: 1446, lines: [["h lime", "Bookend line two."]] },
+];
+const typeEl = $("type");
+const spring = (u) => u <= 0 ? 0 : u >= 1 ? 1 : Math.min(1, (1 - Math.exp(-7 * u) * (1 + 7 * u)) / (1 - 8 * Math.exp(-7)));   // critically damped: no overshoot
+for (const c of CAPS) {
+  c.el = document.createElement("div"); c.el.className = "cap"; typeEl.appendChild(c.el);
+  c.lns = c.lines.map(([cls, html]) => {
+    const d = document.createElement("div"); d.className = "ln " + cls;
+    if (/xl/.test(cls)) { d.innerHTML = [...html].map((ch) => `<span class="ch">${ch === " " ? "&nbsp;" : ch}</span>`).join(""); d.chars = [...d.querySelectorAll(".ch")]; }
+    else d.innerHTML = html;
+    c.el.appendChild(d); return d;
+  });
+}
+function inkWidth(el) { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; }
+function layoutCaps() {                                   // fit headlines to the 928 px column, then anchor bottom captions by their height
+  for (const c of CAPS) for (const ln of c.lns) {
+    if (!/\bh\b/.test(ln.className)) continue;
+    const fs0 = parseFloat(getComputedStyle(ln).fontSize), w = inkWidth(ln);
+    if (w > 928) ln.style.fontSize = (fs0 * 928 / w).toFixed(1) + "px";
+  }
+  for (const c of CAPS) { if (c.zone === "bot") c.el.style.top = (c.y - c.el.offsetHeight) + "px"; else c.el.style.top = c.y + "px"; }
+}
+// soft rise in (opacity + 26 px + blur), per-line stagger; soft fade out
+function capsAt(b) {
+  const t = b * B;
+  for (const c of CAPS) {
+    const tin = c.b0 * B, tout = c.b1 * B;
+    const vis = t >= tin - .01 && t < tout + .35;
+    c.el.style.display = vis ? "block" : "none";
+    if (!vis) continue;
+    const out = E.sine(P(t, tout, tout + .32));
+    c.lns.forEach((ln, i) => {
+      if (ln.chars) {                                   // letter by letter: 28 ms apart, each rises 44 px on the spring
+        ln.style.opacity = (1 - out).toFixed(4); ln.style.transform = `translateY(${(-out * 10).toFixed(2)}px)`; ln.style.filter = "none";
+        ln.chars.forEach((ch, j) => { const t0 = tin + i * .09 + j * .028, u = spring(P(t, t0, t0 + .55));
+          ch.style.opacity = Math.min(1, u * 1.6).toFixed(4); ch.style.transform = `translateY(${((1 - u) * 44).toFixed(2)}px)`; });
+        return;
+      }
+      const u = E.out3(P(t, tin + i * .09, tin + i * .09 + .5));
+      ln.style.opacity = (u * (1 - out)).toFixed(4);
+      ln.style.transform = `translateY(${((1 - u) * 26 - out * 10).toFixed(2)}px)`;
+      ln.style.filter = u < 1 ? `blur(${((1 - u) * 7).toFixed(2)}px)` : "none";
+    });
+  }
+}
+
+// ───────────────────────── counters (stack shot) ─────────────────────────
+const fmt = (x) => x.toFixed(1).replace(".", ",").replace(/,0$/, "");
+const EN = [6.9, 13.8, 20.7], PW = [3.5, 7, 10.5];   // ← example values: put the official numbers here (and in CLAIMS.md)
+function swapNum(elA, elB, vals, unit, b, times) {
+  // value index changes at `times`; old one lifts and fades, new one rises in (no half-cut drum)
+  let k = 0; times.forEach((tt, i) => { if (b >= tt) k = i + 1; });
+  // sequential: the old value lifts out first (0 → .25 beat), the new one rises in after it (.2 → .65 beat) — never two numbers on top of each other
+  const tc = k > 0 ? times[k - 1] : -99, uo = E.in2(P(b, tc, tc + .25)), u = E.out3(P(b, tc + .2, tc + .65));
+  const t0 = tc + .2;                                     // per-digit stagger (.06 beat), each digit on the spring
+  elB.innerHTML = [...fmt(vals[k])].map((c, j) => { const uj = k > 0 ? spring(P(b, t0 + j * .06, t0 + j * .06 + .5)) : 1; return `<span class="ch" style="opacity:${Math.min(1, uj * 1.5).toFixed(3)};transform:translateY(${((1 - uj) * 38).toFixed(1)}px)">${c}</span>`; }).join("") + `<span class="u">${unit}</span>`;
+  elB.style.opacity = k > 0 ? Math.min(1, u * 2) : 1; elB.style.transform = "none"; elB.style.filter = "none";
+  if (k > 0 && uo < 1) {
+    elA.style.display = "block"; elA.innerHTML = `${fmt(vals[k - 1])}<span class="u">${unit}</span>`;
+    elA.style.opacity = 1 - uo; elA.style.transform = `translateY(${-uo * 30}px)`; elA.style.filter = `blur(${uo * 6}px)`;
+  } else elA.style.display = "none";
+}
+function countersAt(b) {
+  const vis = b >= 20.4 && b < 28.6;
+  const cnt = $("cnt");
+  if (!vis) { cnt.style.opacity = 0; return; }
+  const u = E.out3(P(b, 20.6, 21.3)) * (1 - E.sine(P(b, 28.0, 28.5)));
+  cnt.style.opacity = u; cnt.style.transform = `translateY(${(1 - E.out3(P(b, 20.6, 21.3))) * 26}px)`;
+  const times = DOCK.map((d) => d.done);
+  swapNum($("eA"), $("eB"), EN, "kWh", b, times);
+  swapNum($("pA"), $("pB"), PW, "kW", b, times);
+  let n = 1; times.forEach((tt) => { if (b >= tt) n++; });
+  $("mtag").textContent = `${n} × MODULE`;
+  const cu = E.out3(P(b, 23.65, 24.25)); const ce = $("cable"); ce.style.opacity = cu; ce.style.transform = `translateY(${(1 - cu) * 20}px)`; ce.style.filter = cu < 1 ? `blur(${(1 - cu) * 6}px)` : "none";
+}
+
+// ───────────────────────── 2D effects: docking glints, dimension lines, energy lines ─────────────────────────
+const LIME = "#9BE15D", LIME2 = "#CDF5A0";
+function glow(fn, color, blur, alpha) { fx.save(); fx.globalCompositeOperation = "lighter"; fx.globalAlpha = alpha; fx.shadowColor = color; fx.shadowBlur = blur; fx.strokeStyle = color; fx.fillStyle = color; fn(); fx.restore(); }
+function polyAt(pts, u) {                               // the first u (0..1) of a screen polyline
+  const L = []; let tot = 0; for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); L.push(d); tot += d; }
+  let want = u * tot; const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) { if (want >= L[i - 1]) { out.push(pts[i]); want -= L[i - 1]; } else { const f = want / L[i - 1]; out.push({ x: lerp(pts[i - 1].x, pts[i].x, f), y: lerp(pts[i - 1].y, pts[i].y, f) }); break; } }
+  return { out, tot };
+}
+function strokePath(pts) { fx.beginPath(); pts.forEach((p, i) => i ? fx.lineTo(p.x, p.y) : fx.moveTo(p.x, p.y)); fx.stroke(); }
+// energy paths at the house (world space): PV bottom edge → roof edge → down the wall → product; product → along the wall base → into the house
+const sl = Math.atan2(2.6, 4), cs = Math.cos(sl), sn = Math.sin(sl);
+const onRoof = (x, along) => new THREE.Vector3(x, 3 + along * sn + cs * .22, 4.0 - along * cs + sn * .22);
+const LU = HOUSE.productAt;
+const PATH1 = [onRoof(-1.2, .42), onRoof(3.9, .42), new THREE.Vector3(4.55, 3.02, 4.46), new THREE.Vector3(5.55, 3.02, 4.46), new THREE.Vector3(5.55, 2.6, 4.16), new THREE.Vector3(5.55, LU[1] + 1.23 + .06, 4.16)];
+const PATH2 = [new THREE.Vector3(5.2, .2, 4.16), new THREE.Vector3(4.2, .2, 4.16), new THREE.Vector3(1.75, .2, 4.12), new THREE.Vector3(1.75, 1.2, 4.12), new THREE.Vector3(-1.6, 1.2, 4.1)];
+function energyLine(path, cam, u, alpha, b, phase) {
+  const pts = path.map((p) => film.project(p, cam)).filter(Boolean);
+  if (pts.length < 2 || u <= 0) return;
+  const { out, tot } = polyAt(pts, u);
+  glow(() => { fx.lineWidth = 3.2; fx.lineCap = "round"; fx.lineJoin = "round"; strokePath(out); }, LIME, 18, .75 * alpha);
+  glow(() => { fx.lineWidth = 1.4; strokePath(out); }, LIME2, 4, .9 * alpha);
+  // travelling pulses
+  const len = tot * u;
+  for (let k = 0; k < 4; k++) {
+    const s = ((b * .9 + k / 4 + phase) % 1) * len; const a = polyAt(pts, Math.max(0, s - 40) / tot).out, c = polyAt(pts, s / tot).out;
+    const head = c[c.length - 1], tail = a[a.length - 1];
+    glow(() => { fx.lineWidth = 5; fx.lineCap = "round"; fx.beginPath(); fx.moveTo(tail.x, tail.y); fx.lineTo(head.x, head.y); fx.stroke(); }, "#E8FFB0", 14, alpha * .9);
+  }
+  if (u < 1) { const h = out[out.length - 1]; glow(() => { fx.beginPath(); fx.arc(h.x, h.y, 7, 0, 7); fx.fill(); }, "#F2FFD0", 26, alpha); }
+}
+function dimLine(a, b, label, side, u, alpha) {
+  // a, b: screen points; side: unit normal (screen) for the label; u: draw progress
+  const ex = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u) };
+  fx.save(); fx.globalAlpha = alpha; fx.strokeStyle = "rgba(244,244,246,.92)"; fx.lineWidth = 2;
+  fx.beginPath(); fx.moveTo(a.x, a.y); fx.lineTo(ex.x, ex.y); fx.stroke();
+  const tick = (p) => { fx.beginPath(); fx.moveTo(p.x - side.x * 14, p.y - side.y * 14); fx.lineTo(p.x + side.x * 14, p.y + side.y * 14); fx.stroke(); };
+  tick(a); if (u >= 1) tick(b);
+  if (u > .6) {
+    fx.globalAlpha = alpha * P(u, .6, 1);
+    fx.font = "600 34px Barlow"; fx.fillStyle = "#F4F4F6"; fx.textAlign = "center"; fx.textBaseline = "middle";
+    const m = { x: (a.x + b.x) / 2 + side.x * 40, y: (a.y + b.y) / 2 + side.y * 40 };
+    fx.save(); fx.translate(m.x, m.y); let ang = Math.atan2(b.y - a.y, b.x - a.x); if (ang > Math.PI / 2) ang -= Math.PI; if (ang < -Math.PI / 2) ang += Math.PI; fx.rotate(ang); fx.fillText(label, 0, 0); fx.restore();
+  }
+  fx.restore();
+}
+function fxAt(b) {
+  fx.clearRect(0, 0, W, H);
+  const s = film.shotNow, cam = film.cam;
+  // a hand-drawn accent annotation: circle around a product detail (here the level ring), a leader line, the label (use the spec's own name)
+  if (s.id === "macro") {
+    const C0 = [-.03 + .065, .435, .1275 + .001];
+    const rc = film.project(new THREE.Vector3(...C0)), re = film.project(new THREE.Vector3(C0[0] + .0075, C0[1], C0[2]));
+    if (rc && re) {
+      const R = Math.hypot(re.x - rc.x, re.y - rc.y) * 1.45, a = 1 - E.sine(P(b, 16.7, 16.98));
+      const u1 = E.io(P(b, 15.1, 15.55)), u2 = E.io(P(b, 15.45, 15.85)), u3 = spring(P(b, 15.7, 16.3));
+      if (u1 > 0) glow(() => { fx.lineWidth = 3.2; fx.lineCap = "round"; fx.beginPath(); fx.arc(rc.x, rc.y, R, -Math.PI / 2, -Math.PI / 2 + u1 * Math.PI * 2 * .97); fx.stroke(); }, LIME2, 10, a);
+      const top = { x: rc.x, y: rc.y - R - 6 }, end = { x: rc.x, y: Math.max(560, rc.y - R - 300) };
+      if (u2 > 0) glow(() => { fx.lineWidth = 2.6; fx.lineCap = "round"; fx.beginPath(); fx.moveTo(top.x, top.y); fx.lineTo(top.x, lerp(top.y, end.y, u2)); fx.stroke(); }, LIME2, 8, a);
+      if (u3 > 0) {
+        fx.save(); fx.globalAlpha = a * Math.min(1, u3 * 1.4); fx.font = "600 30px Barlow"; fx.letterSpacing = "3px"; fx.fillStyle = "#CDF5A0"; fx.textBaseline = "alphabetic";
+        const txt = "LABEL FOR THIS DETAIL", w = fx.measureText(txt).width, x = clamp(end.x - w / 2, 76, 1004 - w);
+        fx.fillText(txt, x, end.y - 18 + (1 - u3) * 24); fx.restore();
+      }
+    }
+  }
+  // docking glints along the new seam
+  if (s.id === "stack") {
+    for (const d of DOCK) {
+      for (const [tt, yIdx] of [[d.land, null], [d.done, null]]) {
+        const g = P(b, tt, tt + .8); if (g <= 0 || g >= 1) continue;
+        const st = film.stackNow; const n = st.n; const y = (tt === d.done ? n : n - 1) * LUNA.HB;
+        const L = film.project(new THREE.Vector3(-LUNA.W / 2, y, LUNA.D / 2 + .002)), R = film.project(new THREE.Vector3(LUNA.W / 2, y, LUNA.D / 2 + .002));
+        if (!L || !R) continue;
+        const a = (1 - g) * (1 - g);
+        glow(() => { fx.lineWidth = 3; fx.beginPath(); fx.moveTo(L.x, L.y); fx.lineTo(R.x, R.y); fx.stroke(); }, LIME2, 22, a);
+      }
+    }
+    // dimensions of the full stack (3 battery modules + power module = 1230 mm)
+    const dv = P(b, 28.7, 29.6), da = 1 - E.sine(P(b, 31.6, 32));
+    if (dv > 0 && da > 0) {
+      const { W: w, D: d, HP, HB } = LUNA, h = HP + 3 * HB, off = .07, mm = (m) => `${Math.round(m * 1000)} mm`;   // dimensions come from world.js PRODUCT
+      const p = (x, y, z) => film.project(new THREE.Vector3(x, y, z));
+      const bl = p(-w / 2, -off, d / 2 + .05), br = p(w / 2, -off, d / 2 + .05);
+      const tr = p(w / 2 + off, h, d / 2), brr = p(w / 2 + off, 0, d / 2);
+      const db0 = p(w / 2 + off * .6, -off * .6, d / 2), db1 = p(w / 2 + off * .6, -off * .6, -d / 2);
+      if (bl && br) dimLine(bl, br, mm(w), { x: 0, y: 1 }, E.out3(dv), da);
+      if (brr && tr) dimLine(brr, tr, mm(h), { x: 1, y: 0 }, E.out3(P(b, 29.0, 29.9)), da);
+      if (db0 && db1) dimLine(db0, db1, mm(d), { x: .7, y: .7 }, E.out3(P(b, 29.3, 30.2)), da);
+    }
+  }
+  // energy lines at the house: roof → product, product → home
+  const houseCam = film.mixState && film.shotNow.id !== "house" ? film.mixState.camA : (s.id === "house" ? cam : null);
+  if (houseCam) {
+    const alpha = film.mixState ? 1 - film.mixState.k : 1;
+    energyLine(PATH1, houseCam, E.io(P(b, 34.8, 36.4)), alpha, b, 0);
+    energyLine(PATH2, houseCam, E.io(P(b, 36.5, 38.0)), alpha, b, .37);
+  }
+}
+
+// ───────────────────────── scrims + end card ─────────────────────────
+const SCRIM = { room: [1, 0], macro: [0, .9], stack: [.35, .6], house: [.75, 0], night: [.25, 1] };
+function scrimsAt(b) {
+  const s = film.shotNow; let [t, bo] = SCRIM[s.id];
+  if (film.mixState) { const k = film.mixState.k; t = lerp(SCRIM.house[0], SCRIM.night[0], k); bo = lerp(SCRIM.house[1], SCRIM.night[1], k); }
+  const endFade = E.sine(P(b, 44, 44.8));
+  $("scrimT").style.opacity = t * (1 - endFade); $("scrimB").style.opacity = bo * (1 - endFade);
+}
+function endAt(b) {
+  const e = $("end");
+  if (b < 44.2) { e.style.opacity = 0; return; }
+  e.style.opacity = 1;
+  const items = [["endProd", 44.85], ["logo", 45.1], ["endLine", 45.35], ["cta", 45.65], ["url", 45.9], ["src", 46.1]];
+  for (const [id, b0] of items) {
+    const u = E.out3(P(b, b0, b0 + .9)); const el = $(id);
+    el.style.opacity = u; el.style.transform = `translateY(${(1 - u) * 24}px)`; el.style.filter = u < 1 ? `blur(${(1 - u) * 6}px)` : "none";
+  }
+  // a single soft pulse on the CTA when it settles
+  const pu = P(b, 46.5, 47.5); $("cta").style.boxShadow = pu > 0 && pu < 1 ? `0 0 0 ${pu * 26}px rgba(155,225,93,${(1 - pu) * .35})` : "none";
+}
+
+window.renderAt = async (t, q = 1) => {
+  const r = await film.renderAt(Math.min(t, DUR - 1e-6), q);
+  const b = r.b;
+  capsAt(b); countersAt(b); fxAt(b); scrimsAt(b); endAt(b);
+  return r;
+};
+window.layoutInfo = () => CAPS.map((c) => ({ b0: c.b0, b1: c.b1, top: c.el.offsetTop, h: c.el.offsetHeight }));
+await document.fonts.ready;
+// every face the film uses, loaded before frame 0 (a face first used mid-film would paint invisible for that frame)
+const FACES = ["500 100px 'Barlow Condensed'", "600 100px 'Barlow Condensed'", "700 100px 'Barlow Condensed'", "400 40px Barlow", "500 40px Barlow", "600 40px Barlow", "700 40px Barlow"];
+await Promise.all(FACES.map((f) => document.fonts.load(f, "AĂÂÎȘȚaăâîșț0123456789,.−°…×kWh")));
+const missing = FACES.filter((f) => !document.fonts.check(f, "Aa0"));
+if (missing.length) console.error("fonts missing: " + missing.join(" | "));
+await new Promise((r) => { const i = $("logo"); if (!(i instanceof HTMLImageElement) || i.complete) r(); else i.onload = r; });
+layoutCaps();
+window.ready = true;
+</script>
+</body>
+</html>

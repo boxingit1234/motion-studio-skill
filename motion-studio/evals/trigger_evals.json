@@ -1,0 +1,22 @@
+[
+  {"query": "can you make me a 15 sec reel for instagram for our new burger menu, the site is restaurant.example.ro, use the brand colors from there and end with 'Comandă acum'", "should_trigger": true},
+  {"query": "we launch the app next week, i need a short launch video (like 20-30s) showing the main 3 features, vertical for tiktok and a 16:9 one for youtube", "should_trigger": true},
+  {"query": "here's the datasheet pdf for our battery (F:/Downloads/datasheet_v3.pdf) — make a product video with the exact specs, something premium like the sigenergy videos where it starts in a living room and then shows where the product is", "should_trigger": true},
+  {"query": "fa-mi un clip de prezentare de 30 de secunde pentru firma, ceva animat cu logo-ul si cifrele noastre (2800 de clienti, 15 ani)", "should_trigger": true},
+  {"query": "I need an animated end card / logo sting, 3 seconds, our logo is in assets/logo.svg, should feel like Apple keynotes", "should_trigger": true},
+  {"query": "make a meta ad video for our ecommerce shop, 18 seconds, with a phone showing the real checkout flow from our website and a discount at the end", "should_trigger": true},
+  {"query": "turn this pptx deck into a 30s animated promo video for linkedin, keep their fonts and colors", "should_trigger": true},
+  {"query": "kinetic typography video with the lyrics/quote 'energy that stays', bold condensed type, 9:16, synced to a beat", "should_trigger": true},
+  {"query": "can you render a 3d scene of our wall battery standing in a modern garage at dusk with light lines showing energy going from the solar panels into the house? 1080x1920", "should_trigger": true},
+  {"query": "my boss wants a showreel-style motion graphics video for the agency, 15 sec, go all out, no stock footage", "should_trigger": true},
+  {"query": "cut these 12 clips from my phone into a 30 sec tiktok in davinci resolve and add captions to what i say", "should_trigger": false},
+  {"query": "add a fade-in css animation to the hero section of my website when the page loads", "should_trigger": false},
+  {"query": "make a 10-slide powerpoint presentation about our Q3 results with charts", "should_trigger": false},
+  {"query": "transcribe this interview video and burn subtitles into it", "should_trigger": false},
+  {"query": "draw a hand-drawn storybook animation of an ant building a nest for my kids, watercolor style", "should_trigger": false},
+  {"query": "write 5 caption ideas and hashtags for our instagram reel about the new menu", "should_trigger": false},
+  {"query": "compress this mp4 to under 10 MB so i can upload it to the ads manager", "should_trigger": false},
+  {"query": "build a three.js interactive 3d product configurator for our website where users can rotate the product", "should_trigger": false},
+  {"query": "generate a logo for my new coffee brand, something minimal", "should_trigger": false},
+  {"query": "my video export from premiere has the wrong colors on iphone, how do i fix the color space", "should_trigger": false}
+]

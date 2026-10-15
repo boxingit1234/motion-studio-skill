@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<script type="importmap">{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "three-mesh-bvh": "/node_modules/three-mesh-bvh/src/index.js"
+} }</script>
+<style>html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}canvas{display:block}</style>
+</head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script type="module">
+import * as THREE from "three";
+import { PathTracer, buildSet, disposeSet } from "./pt.js";
+import * as Wd from "./world.js";
+const W = 1080, H = 1920;
+const pt = window.pt = new PathTracer(document.getElementById("c"), W, H);
+const dec = Wd.decalTextures(); pt.setDecal(dec.albedo, dec.emit); pt.u.socC.value.set(...Wd.DECAL.socC);
+const cache = {};
+function getSet(name, args) {
+  const key = name + JSON.stringify(args || {});
+  if (cache[key]) return cache[key];
+  const t0 = performance.now();
+  const s = name === "living" ? Wd.livingSet() : name === "house" ? Wd.houseSet() : Wd.studioSet(args || {});
+  const S = buildSet(s.parts); S.anchors = s.anchors;
+  console.log(`set ${name}: ${S.tris} tris, ${(performance.now() - t0).toFixed(0)} ms`);
+  for (const k of Object.keys(cache)) { disposeSet(cache[k]); delete cache[k]; }
+  return cache[key] = S;
+}
+window.look = async (o) => {
+  const S = getSet(o.set, o.args);
+  pt.setSet(S, Wd.MAT);
+  pt.setEnv(o.env);
+  pt.setLights(o.set === "living" ? Wd.livingLights(o.night || 0) : o.set === "house" ? Wd.houseLights(o.lit ?? 1) : Wd.studioLights(o.rim ?? 1, o.accent));
+  pt.u.emitGain.value = o.gains || [1, 1, 1, 1, 1, 1, 1, 1];
+  pt.u.decalGain.value = o.decal || [0, 0, 0]; pt.u.socLevel.value = o.soc ?? 0;
+  pt.setCamera(o.cam, o.cam1);
+  Object.assign(pt.post, o.post || {});
+  const t = performance.now(); await pt.render(o.spp || 16); pt.resolve();
+  const px = new Uint8Array(4); pt.gl.readPixels(0, 0, 1, 1, pt.gl.RGBA, pt.gl.UNSIGNED_BYTE, px);
+  return { ms: Math.round(performance.now() - t), anchors: S.anchors ? { pill: S.anchors.pill, top: S.anchors.top } : null };
+};
+window.ready = true;
+</script></body></html>
