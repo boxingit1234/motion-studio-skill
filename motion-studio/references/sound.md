@@ -68,3 +68,12 @@ The music and the sound effects are synthesized in Python (numpy/scipy), so ther
 
 ## Voice-over (only if asked)
 TTS services need a commercial-use plan. A free ElevenLabs tier has no commercial licence. Never print or store an API key in chat or in the repo; keep it in an `.env` the person controls. Place each line in its beat window, duck the music under the voice (mids more than lows), and transcribe the result locally (e.g. faster-whisper) to verify it.
+
+## Score-first films (the music drives the picture)
+When the soundtrack is synthesized from a score (instead of placing sounds on picture events), write the score first and export every hit to `score.json`: each pluck (string, time, velocity), clap, drum hit, stamp. The picture reads it, so strings vibrate exactly on their plucks, stamps land on the claps and the film is in sync by construction. Keep the score deterministic (one seeded RNG) so a re-mix never moves an event.
+- **Plucked strings (guitar, harp, oud): Karplus–Strong with `scipy.signal.lfilter`.** Delay line `N = floor(P − ½)`, the fractional rest through a first-order allpass, an averaging loss filter with a per-period gain from the target T60, and a noise burst lowpassed for brightness and combed for pick position. Written as one rational transfer function, it runs at C speed. Tuning lands within ±10 cents; nylon T60 ≈ 2 s. Then a "body": three or four peaking EQs (≈ 100 / 200 / 420 Hz, 2.6 kHz) and a 6.5 kHz lowpass.
+- **Strums.** A strum is the chord's strings 3–8 ms apart (down = low→high, up = high→low, ups lighter and on the top strings). A *golpe* / chuck is the same strum damped after ~50 ms plus a band-passed tap. A rasgueado is 3–4 strokes ~30 ms apart and an accent stroke. Two players: the same part with an 8–12 ms offset, panned ±0.35.
+- **Hand claps.** 2–3 band-passed noise bursts ~6 ms apart. Open claps 1–3.8 kHz with a 10 ms decay; muted claps 250–1100 Hz.
+
+## True-peak limiting for percussive mixes
+Mixes full of claps and transients often measure ~−18 LUFS at −1 dBTP: lifting them to −14 LUFS would put peaks above 0. Shave the peaks first with a look-ahead limiter on a 4× oversampled envelope, held ~15 ms and smoothed ~6 ms (no clicks, little pumping). Two passes of ~3 dB each, then peak-normalise to −1.5 dBFS; `make.mjs finish` then lands at −14 LUFS and ≤ −1.5 dBTP after AAC.

@@ -108,3 +108,16 @@ Every time a person points at a frame with a problem the audit missed, add a rul
 | …       |            |                                  |                             |                             |
 | 26–30   | 13.0–15.0  | lockup: logo, CTA button, URL    | CTA in client's wording     | logo hit, tap, final chord  |
 ```
+
+## References before the first frame
+When the brief names a theme, culture or genre (flamenco, a festival, a decade, a craft) and asks for research, study real references *visually* before designing. Open 5–10 real posters, identities, title sequences or album covers, and write down the traits you are taking (palette, typefaces, motifs, production process). Then design. Generic "premium" defaults (glossy 3D fabric, gold-gradient serifs with glow, floating particles or petals, dark vignettes) read as "AI-generated" to clients, however well rendered. Authenticity comes from the genre's real graphic culture and its real materials.
+
+## Print, paper and stop-motion look (recipe)
+For poster-like films (festival, concert, retro, editorial):
+- **Paper:** a cream base, faint mottling (small and soft: large blotches look like clouds), fibres (thousands of short light/dark strokes) and a fine tooth (per-pixel noise). Render it once.
+- **Inks:** each colour is its own flat layer, drawn in solid colour. Knock out a speckle mask where the ink did not take, blur ~0.4 px, and composite with `multiply` (transparent overprint) at a small registration offset per colour (2–4 px, settling on the final hit).
+- **A second press pass** makes a strong final beat: a sunburst or tint behind everything, and a shadow plate under the title. For the shadow, draw the title offset and knock the un-offset title out of that plate; otherwise black multiplied over the colour swallows it.
+- **Cut paper on top** (fans, flowers, ribbons, hems): flat colours with a soft drop shadow, placed in stop-motion steps (12 per second) with a ±0.5 px "boil" per step, so it feels hand-animated.
+- **Stamps:** the first step is a lighter, slightly larger impression (alpha ~0.5, scale ~1.07), then full ink. Put them on the music's hits.
+- **Real typefaces of the genre** beat generic display fonts (e.g. Copperplate Gothic and condensed wood-type faces for Spanish fair posters). Check the machine's installed fonts before downloading any.
+- **Finish:** grain per frame on top; a very soft warm lamp falloff makes it look like a photographed print.

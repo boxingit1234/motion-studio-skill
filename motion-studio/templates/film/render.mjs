@@ -7,7 +7,8 @@
 //   node render.mjs verify [t,t,…] [q]            → frames rendered in and out of order must be identical
 //   node render.mjs frames [q] [from] [to]        → out/frames/f_NNNN.png         (resumable; fine for short 2D films)
 //   node render.mjs encode                        → out/video.mp4 from out/frames (H.264 CRF 14, BT.709)
-//   node render.mjs chunks [k0] [k1]              → out/chunks/c_NNN.mp4          (1-s chunks, resumable; env NICE_MS, DUTY = gentle mode)
+//   node render.mjs chunks [k0] [k1]              → out/chunks/c_NNN.mp4          (1-s chunks, resumable; env NICE_MS, DUTY = gentle mode;
+//                                                                                    env SUB = motion-blur sub-frames, SHUTTER = 0.5)
 //   node render.mjs concat                        → out/video.mp4 from the chunks (stream copy)
 // Env W / H override the frame size (default 1080 × 1920).
 import fs from "node:fs";
@@ -117,6 +118,7 @@ if (mode === "events") {
   await page.evaluate((n) => { window.NICE_MS = n; }, NICE);
   const N = Math.round(DUR * FPS), K = Math.ceil(N / FPS), k0 = parseInt(args[0] || "0"), k1 = Math.min(K, parseInt(args[1] || String(K)));
   const t0 = Date.now(); let made = 0;
+  const SUB = parseInt(process.env.SUB || "1"), SHUT = parseFloat(process.env.SHUTTER || ".5");
   for (let k = k0; k < k1; k++) {
     const f = path.join(CH, `c_${String(k).padStart(3, "0")}.mp4`);
     if (fs.existsSync(f)) continue;
@@ -126,9 +128,23 @@ if (mode === "events") {
     const closed = new Promise((r) => ff.on("close", r));
     for (let i = k * FPS; i < Math.min(N, (k + 1) * FPS); i++) {
       const old = path.join(FR, `f_${String(i).padStart(4, "0")}.png`), ts = Date.now();
-      const png = fs.existsSync(old) ? fs.readFileSync(old) : (await shot(i / FPS, 1)).buf;
-      const { data, width, height } = PNG.sync.read(png);
-      const rgb = Buffer.alloc(width * height * 3); for (let p = 0, q = 0; p < data.length; p += 4, q += 3) { rgb[q] = data[p]; rgb[q + 1] = data[p + 1]; rgb[q + 2] = data[p + 2]; }
+      let rgb;
+      if (SUB > 1 && !fs.existsSync(old)) {
+        // motion blur: SUB sub-frames spread over SHUTTER of the frame interval (0.5 = a 180° film shutter), averaged.
+        // Stepped (stop-motion) elements stay crisp: their sub-frames are identical.
+        let acc = null, width = 0, height = 0;
+        for (let s = 0; s < SUB; s++) {
+          const tt = Math.max(0, i / FPS + ((s + .5) / SUB - .5) * SHUT / FPS);
+          const im = PNG.sync.read((await shot(tt, 1)).buf); width = im.width; height = im.height;
+          if (!acc) acc = new Uint16Array(width * height * 3);
+          for (let p = 0, q = 0; p < im.data.length; p += 4, q += 3) { acc[q] += im.data[p]; acc[q + 1] += im.data[p + 1]; acc[q + 2] += im.data[p + 2]; }
+        }
+        rgb = Buffer.alloc(width * height * 3); for (let q = 0; q < acc.length; q++) rgb[q] = Math.round(acc[q] / SUB);
+      } else {
+        const png = fs.existsSync(old) ? fs.readFileSync(old) : (await shot(i / FPS, 1)).buf;
+        const { data, width, height } = PNG.sync.read(png);
+        rgb = Buffer.alloc(width * height * 3); for (let p = 0, q = 0; p < data.length; p += 4, q += 3) { rgb[q] = data[p]; rgb[q + 1] = data[p + 1]; rgb[q + 2] = data[p + 2]; }
+      }
       await new Promise((r) => ff.stdin.write(rgb) ? r() : ff.stdin.once("drain", r));
       if (!fs.existsSync(old)) { made++; if (DUTY > 0) await new Promise((r) => setTimeout(r, (Date.now() - ts) * DUTY)); }
     }

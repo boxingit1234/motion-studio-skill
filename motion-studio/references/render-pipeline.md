@@ -61,6 +61,10 @@ Use `q < 1` for sheets: 3D samples scale with `q`, and 2D ignores it.
 - **Always tag BT.709** (`-colorspace bt709 -color_primaries bt709 -color_trc bt709`, and `scale=out_color_matrix=bt709:out_range=tv` when converting from RGB). Untagged files shift colour on phones.
 - **Audio mux.** Pad the audio to the video length (`apad=whole_dur=<video duration>`) and cut with `-t`. Never use `-shortest`: it ate two frames once.
 - **Chunks.** Each chunk is 30 frames, `-x264-params keyint=30:min-keyint=30`, same CRF, so `concat -c copy` joins them without re-encoding. A chunk file appears only when it is complete (`.tmp` then rename), so a crash costs at most one second of work.
+- **Count the chunks before `concat`.** A render split into several foreground runs can stop one chunk short of the end (a timeout); `concat` happily joins what is there and the film is a second short.
+- **Single-file encodes (not chunks).** x264's default GOP (keyint 250) puts an I-frame mid-film; on smooth gradients (sky, paper, light) it shows as a one-frame brightness blip. For short films encode with `-x264-params keyint=<frames>:min-keyint=<frames>:scenecut=0` (one GOP).
+- **Motion blur.** `SUB=3 node render.mjs chunks` renders 3 sub-frames per frame over a 180° shutter (`SHUTTER`) and averages them. Fast moves stop strobing; stepped (stop-motion) elements stay crisp. Cost × SUB.
+- **Footage or a rendered plate under HTML overlays.** Decode the plate once into a single MJPEG stream plus a byte index (`ffmpeg -f image2pipe -c:v mjpeg -q:v 1`, split on `FF D8 FF`) and serve frame *i* at `/plate/<i>`. `seek(t)` sets the `<img>` source and awaits `img.decode()`. One file instead of hundreds (antivirus), exact frames, and `backdrop-filter` frosted cards see the real picture.
 - **Check every output.**
   - `ffprobe -count_frames` → `nb_read_frames` equals `DUR × FPS`.
   - `format=duration` equals `DUR`.
@@ -73,7 +77,9 @@ Use `q < 1` for sheets: 3D samples scale with `q`, and 2D ignores it.
   - an image decoded late;
   - a variable cached between calls;
   - a canvas not cleared;
-  - a DOM element whose `display` was toggled but whose layout relied on flex.
+  - a DOM element whose `display` was toggled but whose layout relied on flex;
+  - `will-change: transform` on text that animates in and out: Chromium keeps the rasterised glyphs, so the same frame differs (up to ~125/255 on glyph edges) depending on what was rendered before. Remove it from animated words; an element that fades to 0 and back instead needs a *permanent* `will-change`, so it is always on its own layer;
+  - a reveal clip whose width has a minimum (`px(x) + 8`) leaks the start of a hidden path; hide the element at zero instead.
 - **Camera match cuts** can be verified without any rendering. Import the film's shot table in Node and project the same 3D point on both sides of the cut (`templates/film-3d/camcheck.mjs`). It must land on the same pixel.
 
 ## 6. Reviewing
