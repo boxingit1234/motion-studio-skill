@@ -34,7 +34,10 @@ const steps = {
     console.log(`mix measured ${j.input_i} LUFS, ${j.input_tp} dBTP`);
     // the picture is the master clock: pad / trim the audio to the video's exact length (never -shortest)
     const vdur = parseFloat(spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", "out/video.mp4"], { cwd: HERE, encoding: "utf8" }).stdout);
-    const ln = `loudnorm=I=${LUFS}:TP=${TP}:LRA=11:measured_I=${j.input_i}:measured_TP=${j.input_tp}:measured_LRA=${j.input_lra}:measured_thresh=${j.input_thresh}:offset=${j.target_offset}:linear=true,aresample=48000,apad=whole_dur=${vdur.toFixed(4)}`;
+    // one exact gain to −14 LUFS (loudnorm's second pass can silently fall back to dynamic mode and lift quiet passages into overs)
+    const gain = LUFS - parseFloat(j.input_i);
+    if (parseFloat(j.input_tp) + gain > TP) console.log(`warning: true peak would be ${(parseFloat(j.input_tp) + gain).toFixed(1)} dBTP — limit the mix harder`);
+    const ln = `volume=${gain.toFixed(2)}dB,aresample=48000,apad=whole_dur=${vdur.toFixed(4)}`;
     run("ffmpeg", ["-v", "error", "-y", "-i", "out/video.mp4", "-i", MIX, "-map", "0:v", "-map", "1:a", "-af", ln,
       "-c:v", "copy", "-c:a", "aac", "-b:a", "256k", "-t", vdur.toFixed(4), "-movflags", "+faststart", FINAL]);
     run("ffmpeg", ["-v", "error", "-y", "-i", FINAL, "-c:v", "libx264", "-preset", "slow", "-crf", "21", "-profile:v", "high", "-pix_fmt", "yuv420p",

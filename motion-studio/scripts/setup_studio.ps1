@@ -1,7 +1,7 @@
 # setup_studio.ps1 - create a motion studio folder and install what it needs (Windows).
 #   powershell -ExecutionPolicy Bypass -File setup_studio.ps1 -Studio D:\motion-studio [-Yes]
 # Downloads (asked before, unless -Yes): npm packages playwright 1.63.0, three 0.186.1, three-mesh-bvh 0.9.15, pngjs 5 (~60 MB),
-# Chromium for Playwright (~150 MB), Python wheels numpy, scipy, soundfile, pillow (~60 MB). ffmpeg is NOT installed here.
+# Chromium for Playwright (~150 MB), Python wheels numpy, scipy, soundfile, pillow, opencv-python-headless (~110 MB). ffmpeg is NOT installed here.
 param([Parameter(Mandatory = $true)][string]$Studio, [switch]$Yes, [string]$Python = '')
 $ErrorActionPreference = 'Stop'
 
@@ -35,7 +35,7 @@ try {
   & npx.cmd playwright install chromium; Run 'playwright install chromium'
   if (-not (Test-Path '.venv')) { & $Python -m venv .venv; Run 'python -m venv' }
   & .\.venv\Scripts\python.exe -m pip install --upgrade pip; Run 'pip upgrade'
-  & .\.venv\Scripts\python.exe -m pip install numpy scipy soundfile pillow; Run 'pip install'
+  & .\.venv\Scripts\python.exe -m pip install numpy scipy soundfile pillow opencv-python-headless; Run 'pip install'
   if (-not (Test-Path 'CLAUDE.md')) {
 @'
 # Motion studio

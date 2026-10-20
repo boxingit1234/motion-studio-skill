@@ -200,7 +200,7 @@ if (-not (Run-Step 'Downloading Chromium for rendering (~150 MB)' 'npx.cmd' 'pla
 $venvPy = Join-Path $Studio '.venv\Scripts\python.exe'
 if (Test-Path $venvPy) { Quick-Step 'Python environment (already there)' { } }
 elseif (-not (Run-Step 'Creating the Python environment' $Py ('-m venv ' + (Q (Join-Path $Studio '.venv'))) 40 $Studio)) { return }
-if (-not (Run-Step 'Installing the Python audio packages (~60 MB)' $venvPy '-m pip install --disable-pip-version-check numpy scipy soundfile pillow' 120 $Studio)) { return }
+if (-not (Run-Step 'Installing the Python packages (~110 MB)' $venvPy '-m pip install --disable-pip-version-check numpy scipy soundfile pillow opencv-python-headless' 120 $Studio)) { return }
 
 # ----- 4. a 4-frame test -----
 if (-not $NoTest) {

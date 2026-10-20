@@ -42,7 +42,7 @@ In Claude Code, write:
 (or any folder, e.g. `C:\Users\<you>\motion-studio`, or `~/motion-studio` on a Mac)
 
 Claude runs the skill's setup script:
-- It tells you what it will download: Playwright + Chromium, three.js, Python audio packages; about 270 MB in total.
+- It tells you what it will download: Playwright + Chromium, three.js, Python audio packages and OpenCV (face framing); about 320 MB in total.
 - It asks for your OK, then installs everything into that folder only.
 
 To do it yourself instead, in PowerShell:

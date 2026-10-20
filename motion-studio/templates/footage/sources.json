@@ -1,0 +1,8 @@
+{
+ "_readme": "One entry per clip. phone: true lifts flat phone footage. banned: true makes the renderer refuse the clip (a screen recording, another artist's name on a screen, last year's concept...). max: the last safe second (e.g. before a clip turns into something else). Write down why in note.",
+ "A1": {"file": "footage/clip1.mp4", "note": "vertical, graded"},
+ "A2": {"file": "footage/clip2.mp4", "note": "vertical"},
+ "A3": {"file": "footage/clip3.mp4", "note": "vertical"},
+ "L1": {"file": "footage/clip4.mp4", "phone": true, "note": "landscape phone clip"},
+ "X1": {"file": "footage/screen-recording.mp4", "banned": true, "note": "example of a clip the client said never to use"}
+}

@@ -7,9 +7,11 @@ description: >
   TikTok, Shorts, Meta ads, LinkedIn or a website (9:16, 16:9, 1:1, 4:5) with original music and sound design. Use
   it whenever someone wants a new video, reel, clip, ad or motion graphics made for a brand, product, app, site or
   event, especially from a URL, product page, datasheet, PDF, deck or logo files, even if they never mention code,
-  animation tools or rendering. Also for Romanian requests (reel, clip, videoclip de prezentare, animație). Not
-  for editing, captioning or re-encoding existing footage (Premiere, DaVinci, CapCut), slide decks, website UI or
-  CSS animation, interactive 3D web apps, hand-drawn storybook animation, or designing logos.
+  animation tools or rendering. Also event, party and artist promos cut to the music from footage the client supplies
+  (DJ sets, past events) with motion graphics on top. Also for Romanian requests (reel, clip, videoclip de prezentare,
+  animație, promo petrecere). Not for plain editing, captioning or re-encoding of existing footage in an editor
+  (Premiere, DaVinci, CapCut), slide decks, website UI or CSS animation, interactive 3D web apps, hand-drawn storybook
+  animation, or designing logos.
 ---
 
 # Motion Studio
@@ -22,7 +24,7 @@ Make short films (typically 9:16 1080×1920 reels, also 16:9 / 1:1 / 4:5) entire
 
 Everything a viewer sees is a pure function of `t`. That is what makes renders repeatable, seekable and resumable.
 
-If the request is to edit, caption, compress or color-fix a video that already exists, or to build slides or a website animation, say this skill is not the right tool and help directly instead.
+If the request is to edit, caption, compress or color-fix a video that already exists, or to build slides or a website animation, say this skill is not the right tool and help directly instead. A promo cut from supplied footage (an event, a DJ, last year's party) IS in scope: use `templates/footage/` and `references/footage-promos.md`.
 
 ## What's in this skill
 
@@ -34,8 +36,10 @@ If the request is to edit, caption, compress or color-fix a video that already e
 | `references/sound.md` | Event-driven score + sound design, mix targets, measurements, loudness finish | When doing audio |
 | `references/path-tracer-3d.md` | The 3D path tracer: sets, materials, lights, product modelling at exact dimensions, cameras, match cuts, costs | Only when the film needs 3D scenes |
 | `references/claims-and-sources.md` | Getting facts right: official sources, `CLAIMS.md`, what never to claim, capturing websites safely | Any film with product facts, prices, specs or a client brand |
+| `references/footage-promos.md` | Event / club / artist promos cut from supplied footage: what clients asked for, beat-grid music, DJ transitions, face framing, graphics techniques | Any promo built from real footage |
 | `templates/film/` | A complete, working 2D reel (15 s, kinetic type, product card, counter, chart, CTA) + render, sound and finish scripts | Start every 2D film from here |
 | `templates/film-3d/` | The path tracer + example sets (studio, room, house) + a working 3D film and look-dev tools | Start a 3D film from here |
+| `templates/footage/` | Footage promo pipeline: shot list on the beat grid (cuts, grids, splits, strips, ramps, iris), face framing, measured BPM / kick phase / drops, DJ transitions, a graphics toolkit (type mattes, text behind people, tickers, optical centring) + an example | Start every footage promo from here |
 | `scripts/setup_studio.ps1` / `.sh` | Creates a studio folder and installs everything (asks before downloading) | First use |
 | `scripts/new_film.mjs` | Copies a template into `<studio>/films/<name>` | Every new film |
 
@@ -54,7 +58,7 @@ Follow these steps in order. Each one exists because skipping it once cost a cli
    - Pick a BPM so the duration is a whole number of beats (e.g. 30 s = 48 beats at 96 BPM; 15 s = 30 beats at 120 BPM).
    - Put every scene change, caption and sound event on that grid (`bar(n, beat)` / `bt(b)`).
    - Write the storyboard as a short table (beat → picture → text → sound) and share it before building if the person is reachable.
-4. **Scaffold.** Run `node <skill>/scripts/new_film.mjs <studio> <name> [film|film-3d]`, then edit `comp.html` (2D) or `film.js` + `world.js` + `comp.html` (3D).
+4. **Scaffold.** Run `node <skill>/scripts/new_film.mjs <studio> <name> [film|film-3d|footage]`, then edit `comp.html` (2D), `film.js` + `world.js` + `comp.html` (3D), or `sources.json` + `edit.json` + `comp.html` (footage; follow `references/footage-promos.md`).
 5. **Build in small loops.** Render contact sheets at low quality (`node render.mjs beats 0.5,4,8,… 0.25 sheet`) and look at them. Fix, re-sheet. Never judge motion from one frame. Sheet every beat (or half beat) across the whole film before any final render.
 6. **Audit** (`node render.mjs audit 0.25`). Text must never overlap the product or other text, and must stay inside the platform safe area. Fix every hit; don't argue with the audit.
 7. **Sound.** Run `python audio.py out/mix.wav out/stems`, then `python check.py`: loudness per section, spectrum, siren/glide test, clicks.

@@ -1,0 +1,34 @@
+{
+ "_readme": "Example 15 s promo cut from supplied footage. Put the clips in footage/ and list them in sources.json; put the song in music/. Run tools/beatgrid.py song music/song.mp3 to get the real BPM, kick phase and drops, then set grid.bpm and music.start = drop - 2 * 60 / bpm so the drop lands on beat 2. Every shot starts on beat b and lasts until the next one. focus 'face' frames on the face found by tools/faces.py scan.",
+ "fps": 25, "dur": 15.0, "size": [1080, 1920],
+ "grid": [{"b": 0, "bpm": 124.0}],
+ "shake": [[2, 24]], "shake_amp": 14,
+ "music": [{"file": "music/song.mp3", "start": 0.0, "at": 0, "until": 31.1}],
+ "sfx": [{"file": "assets/sfx/whoosh.mp3", "peak_at": 2, "gain": -11}],
+ "shots": [
+  {"b": 0, "src": "A1", "t": 0.5, "zoom": [1.3, 1.15], "focus": "face", "note": "hook: footage inside the date (comp.html typeMatte)"},
+  {"b": 2, "src": "A2", "t": 1.0, "zoom": [1.14, 1.02], "focus": "face", "punch": 0.09, "flash": 1, "note": "the DROP: title slam"},
+  {"b": 4, "src": "A3", "t": 2.0, "zoom": [1.1, 1.18], "blur": 20, "gain": 0.5, "note": "backdrop for the title behind the cut-out"},
+  {"b": 6, "src": "A1", "t": 4.0, "zoom": [1.12, 1.04], "focus": "face", "ca": 8},
+  {"b": 7, "src": "A2", "t": 3.0, "zoom": [1.1, 1.02], "focus": "face", "ca": 8},
+  {"b": 8, "src": "A3", "t": 4.0, "zoom": [1.0, 1.06], "focus": "face",
+   "strip": {"src": "L1", "t": 2.0, "angle": -6, "y": 0.6, "h": 0.22, "zoom": [1.0, 1.06], "focus": [0.5, 0.45]}, "note": "strip + tickers"},
+  {"b": 10, "src": "A1", "t": 6.0, "zoom": [1.08, 1.0], "focus": "face", "punch": 0.05},
+  {"b": 11, "src": "L1", "t": 4.0, "zoom": [1.3, 1.22], "focus": "face", "ca": 8, "note": "a landscape clip, cropped to the face"},
+  {"b": 12, "cells": [
+    {"src": "A1", "t": 7.0, "rect": [0, 0, 0.5, 0.5], "on": 0, "focus": "face", "zoom": [1.15, 1.1]},
+    {"src": "A2", "t": 5.0, "rect": [0.5, 0, 1, 0.5], "on": 0.25, "focus": "face", "zoom": [1.15, 1.1]},
+    {"src": "A3", "t": 6.0, "rect": [0, 0.5, 0.5, 1], "on": 0.5, "focus": "face", "zoom": [1.15, 1.1]},
+    {"src": "L1", "t": 6.0, "rect": [0.5, 0.5, 1, 1], "on": 0.75, "focus": "face", "zoom": [1.3, 1.3]}], "gutter": 10, "note": "2x2 grid, a cell on every 16th"},
+  {"b": 13, "src": "A2", "t": 7.0, "zoom": [1.1, 1.02], "focus": "face"},
+  {"b": 14, "src": "A3", "t": 8.0, "ramp": [1.0, 0.3], "zoom": [1.05, 1.18], "focus": "face", "flash": 2, "note": "speed ramp into slow motion"},
+  {"b": 16, "src": "A1", "t": 9.0, "zoom": [1.0, 1.08], "focus": "face", "trans": {"type": "iris", "f": 8, "c": [0.5, 0.15]}, "note": "iris (circle) transition"},
+  {"b": 18, "src": "A2", "t": 9.0, "zoom": [1.0, 1.25], "focus": "face", "whiteout": [0.5, 1.0]},
+  {"b": 20, "cells": [{"src": "A1", "t": 10.0, "zoom": [1.04, 1.1], "focus": "face"}, {"src": "L1", "t": 8.0, "zoom": [1.25, 1.35], "focus": "face"}],
+   "split": {"angle": 58, "p": [[0, 1.0], [1.4, 0.5], [3.55, 0.5], [3.98, 0.0]], "seam": 5}, "note": "diagonal split: a transition between two artists / songs"},
+  {"b": 24, "src": "L1", "t": 10.0, "zoom": [1.34, 1.22], "focus": "face", "punch": 0.09, "flash": 1},
+  {"b": 25, "src": "A3", "t": 10.0, "zoom": [1.08, 1.0], "focus": "face"},
+  {"b": 26, "src": "A2", "t": 11.0, "zoom": [1.04, 1.1], "focus": "face", "blur": 8, "gain": 0.55, "flash": 2, "note": "lockup: a soft backdrop"},
+  {"b": 29, "src": "A1", "t": 12.0, "zoom": [1.0, 1.06], "focus": "face", "blur": 8, "gain": 0.55}
+ ]
+}

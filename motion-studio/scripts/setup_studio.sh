@@ -2,7 +2,7 @@
 # setup_studio.sh — create a motion studio folder and install what it needs (macOS / Linux).
 #   bash setup_studio.sh ~/motion-studio [--yes]
 # Downloads (asked before, unless --yes): npm packages playwright 1.63.0, three 0.186.1, three-mesh-bvh 0.9.15, pngjs 5 (~60 MB),
-# Chromium for Playwright (~150 MB), Python wheels numpy, scipy, soundfile, pillow (~60 MB). ffmpeg is NOT installed here.
+# Chromium for Playwright (~150 MB), Python wheels numpy, scipy, soundfile, pillow, opencv-python-headless (~110 MB). ffmpeg is NOT installed here.
 set -euo pipefail
 STUDIO="${1:?usage: setup_studio.sh <studio-folder> [--yes]}"; YES="${2:-}"
 need() { command -v "$1" >/dev/null 2>&1 || { echo "MISSING: $1 -> $2"; return 1; }; }
@@ -20,7 +20,7 @@ npm install --save-dev playwright@1.63.0 three@0.186.1 three-mesh-bvh@0.9.15 png
 npx playwright install chromium
 [ -d .venv ] || python3 -m venv .venv
 ./.venv/bin/python -m pip install --upgrade pip
-./.venv/bin/python -m pip install numpy scipy soundfile pillow
+./.venv/bin/python -m pip install numpy scipy soundfile pillow opencv-python-headless
 if [ ! -f CLAUDE.md ]; then cat > CLAUDE.md <<'EOF'
 # Motion studio
 

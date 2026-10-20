@@ -4,3 +4,16 @@ node_modules/
 __pycache__/
 *.pyc
 out/
+
+# client media never goes in the repo
+*.mp4
+*.mov
+*.m4v
+*.webm
+*.mp3
+*.wav
+*.m4a
+*.aac
+*.psd
+*.psb
+faces.json

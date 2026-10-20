@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>html,body{margin:0;background:transparent;overflow:hidden}body{background-repeat:no-repeat!important}#c{position:absolute;left:0;top:0}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// The graphics of the example promo (edit.json): replace the CONFIG with the event's facts and the client's logos.
+// Beats (124 BPM): 0–2 the hook (the date with footage inside the letters, a dive into the drop) · 2 the title slams · 4–6 the title giant
+// behind a cut-out (if assets/<CUT>_sticker.png exists) · 8–12 tickers · persistent venue + date marks · 20–24 split labels + badge ·
+// 26 → end the lockup. Every element is placed on its optical centre (gfx.js).
+import { X, W, H, DUR, bt, el, slam, scrim, typeMatte, behind, ticker, badge, life, begin, loadImages, useFont, IM } from './gfx.js';
+
+const CONFIG = {
+  date: '31.12', dateLong: '31 DECEMBER · 22:00', title: 'ARTIST NAME', venue: 'VENUE NAME', address: 'STREET 1, CITY', rsvp: 'RSVP 0700 000 000',
+  logos: [],            // e.g. ['logo_artist', 'logo_venue'] → assets/<name>@4x.png (tools/logo_prep.py crisp); use { img: name } items below
+  cut: null,            // e.g. 'artist' → assets/artist_sticker.png (tools/logo_prep.py sticker)
+  font: null,           // e.g. ['Brand', 'fonts/Brand-Bold.otf'] — loaded before frame 0
+};
+if (CONFIG.font) await useFont(...CONFIG.font);
+if (CONFIG.logos.length || CONFIG.cut) await loadImages([...CONFIG.logos, ...(CONFIG.cut ? [CONFIG.cut + '_sticker'] : [])]);
+const T = (text, size) => ({ text, size });
+const hook = T(CONFIG.date, 300), title = T(CONFIG.title, 120);
+
+window.renderAt = async (t) => {
+  begin();
+  typeMatte(t, 0, bt(2), bt(1.45), hook, W / 2, H / 2, 0);                         // 0–2: the date, footage inside, dive in on the drop
+  slam(t, title, W / 2, 930, 0, bt(2), bt(3.9));                                    // 2: the title lands
+  behind(t, bt(4), bt(6), T(CONFIG.title, 300), 0, 760, CONFIG.cut && CONFIG.cut + '_sticker', 1380);
+  ticker(t, bt(8), bt(12), 520, -7, `${CONFIG.title} + ${CONFIG.dateLong} + ${CONFIG.venue} + `, 520, '#000', '#fff', 1);
+  ticker(t, bt(8.5), bt(12), 1460, 6, `${CONFIG.rsvp} + ${CONFIG.date} + `, 460, '#fff', '#000', -1);
+  for (const [a, b] of [[6, 8], [12, 20], [24, 26]]) {                              // persistent marks (hidden under full-screen graphics)
+    const L = life(t, bt(a), bt(b) - .02, .2, .12, 1.04); if (!L) continue;
+    scrim(110, 380, .3 * L.alpha); scrim(1330, 1540, .35 * L.alpha);
+    el(t, T(CONFIG.venue, 64), W / 2, 245, 0, bt(a), bt(b) - .02, { inD: .2 });
+    el(t, T(CONFIG.dateLong, 60), W / 2, 1435, 0, bt(a), bt(b) - .02, { inD: .2 });
+  }
+  el(t, T('A', 110), W * .3, 560, 0, bt(20.25), bt(23.55), { pulse: true });         // split labels (one per side) + a badge on the seam
+  el(t, T('B', 110), W * .7, 1380, 0, bt(21.4), bt(23.55), { pulse: true });
+  badge(t, bt(21.5), bt(23.55), W / 2, H / 2, T('&', 70));
+  if (t >= bt(26)) {                                                                // the lockup
+    const a = Math.min(1, (t - bt(26)) / .45); scrim(560, 1500, .62 * a);
+    el(t, T(CONFIG.venue, 72), W / 2, 760, 0, bt(26), DUR + 1);
+    el(t, T(CONFIG.title, 120), W / 2, 930, 0, bt(26.4), DUR + 1);
+    el(t, T(CONFIG.dateLong, 70), W / 2, 1100, 0, bt(26.9), DUR + 1, { inD: .28 });
+    el(t, T(CONFIG.address, 44), W / 2, 1220, 0, bt(27.4), DUR + 1, { inD: .28 });
+    el(t, T(CONFIG.rsvp, 44), W / 2, 1290, 0, bt(27.6), DUR + 1, { inD: .28 });
+  }
+  return { shot: t < bt(2) ? 'hook' : t < bt(20) ? 'section 1' : t < bt(24) ? 'split' : t < bt(26) ? 'section 2' : 'lockup' };
+};
+window.ready = true;
+</script>
+</body>
+</html>

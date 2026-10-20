@@ -26,7 +26,7 @@ winget install --id GitHub.cli -e --accept-source-agreements --accept-package-ag
 It asks for a folder and a yes. A **progress bar** with a live status line shows every step, so you always see that it's working. Then it:
 1. installs **Node.js, Python 3.12 and FFmpeg** if they are missing (with `winget`; Windows may ask for permission);
 2. installs the skill to `%USERPROFILE%\.claude\skills\motion-studio`;
-3. sets up the studio folder (default `%USERPROFILE%\motion-studio`): Playwright + Chromium, three.js, the Python audio packages (~270 MB);
+3. sets up the studio folder (default `%USERPROFILE%\motion-studio`): Playwright + Chromium, three.js, the Python audio + OpenCV packages (~320 MB);
 4. renders a 4-frame test;
 5. shows the **steps to follow in Claude** and saves them to `START-HERE.md` in the studio folder.
 

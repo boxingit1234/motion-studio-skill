@@ -9,6 +9,8 @@
   {"query": "kinetic typography video with the lyrics/quote 'energy that stays', bold condensed type, 9:16, synced to a beat", "should_trigger": true},
   {"query": "can you render a 3d scene of our wall battery standing in a modern garage at dusk with light lines showing energy going from the solar panels into the house? 1080x1920", "should_trigger": true},
   {"query": "my boss wants a showreel-style motion graphics video for the agency, 15 sec, go all out, no stock footage", "should_trigger": true},
+  {"query": "here are clips from last year's party and the DJ's track, make a 20s promo reel for saturday's event like this reference, go all out", "should_trigger": true},
+  {"query": "fa-mi un promo de 30 de secunde pentru petrecerea de sambata cu cei doi DJ, iti dau videoclipurile lor si piesele, taiat pe beat cu infoul de pe afis", "should_trigger": true},
   {"query": "cut these 12 clips from my phone into a 30 sec tiktok in davinci resolve and add captions to what i say", "should_trigger": false},
   {"query": "add a fade-in css animation to the hero section of my website when the page loads", "should_trigger": false},
   {"query": "make a 10-slide powerpoint presentation about our Q3 results with charts", "should_trigger": false},
